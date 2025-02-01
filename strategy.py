@@ -1,5 +1,4 @@
 import pandas as pd
-import logging
 
 def calculate_moving_averages(data, periods):
     """
