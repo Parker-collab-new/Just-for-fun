@@ -3,6 +3,7 @@ import logging
 import pandas as pd
 from binance.client import Client
 from strategy import calculate_moving_averages , backtest_long_strategy
+from indicators.ATR import calculate_atr
 # 初始化日志
 logging.basicConfig(
     filename="回測_log.log",
