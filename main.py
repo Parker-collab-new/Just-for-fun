@@ -1,9 +1,14 @@
 import os
 import logging
+import sys
 import pandas as pd
 from binance.client import Client
-from strategy import calculate_moving_averages , backtest_long_strategy
+from indicators.MA import calculate_moving_averages 
 from indicators.ATR import calculate_atr
+from symbol_setting import TradingSettingsApp
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QDialog
+from Strategy.codition_setting import TradingConditionApp
 # 初始化日志
 logging.basicConfig(
     filename="回測_log.log",
@@ -61,12 +66,32 @@ def backtest_multiple_symbols(symbols, interval, periods):
 
 # 主程式入口
 if __name__ == "__main__":
-    symbols = ['ZENUSDT', 'ETHUSDT', 'BNBUSDT']
-    interval = '1h'
-    periods = [7, 25, 99]
+    app = QApplication(sys.argv)
+    
+    settings_window = TradingSettingsApp()
 
+    user_settings = None  # 先定義，確保變數存在
+
+    if settings_window.exec_() == QDialog.Accepted:  # 用戶點了「確定」
+        user_settings = settings_window.get_settings()  # 只在接受後獲取參數
+        condition_window = TradingConditionApp(settings_window)  # 傳遞 settings_window
+        condition_window.show()
+
+    print("用戶設定的參數：", user_settings)
+
+    # 提取用戶的設置參數
+    symbols = [user_settings['symbol']]  # 這裡假設你只選擇了一個交易對
+    interval = user_settings['interval']
+    ma_periods = user_settings['periods']
+    bollingerBands = user_settings['BollingerBands']
+    atr = user_settings['ATR']
+    macd = user_settings['MACD']
+    rsi = user_settings['RSI']
+   
+
+    # 在這裡調用回測函數
     logging.info("回測開始...")
-    results = backtest_multiple_symbols(symbols, interval, periods)
+    results = backtest_multiple_symbols(symbols, interval, ma_periods)
 
     # 輸出結果
     for symbol, result in results.items():
@@ -75,3 +100,5 @@ if __name__ == "__main__":
         logging.info(f"總交易次數: {result['Total_Trades']}")
         logging.info(f"總盈虧: {result['Total_PnL']:.2f} USDT ({result['Total_PnL_Percent']:.2f}%)")
         logging.info(f"總費用: {result['Total_Fees']:.2f} USDT")
+    
+    sys.exit(app.exec_())  # 確保退出 QApplication

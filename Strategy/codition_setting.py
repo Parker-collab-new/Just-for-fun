@@ -2,11 +2,12 @@ import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QComboBox, QLineEdit, QCheckBox
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
+from PyQt5.QtWidgets import QDialog
 
-class TradingConditionApp(QWidget):
-    def __init__(self):
+class TradingConditionApp(QDialog):
+    def __init__(self, settings):
         super().__init__()
-
+        self.settings = settings  # 存入 settings 供後續使用
         self.initUI()
 
     def initUI(self):
@@ -82,7 +83,13 @@ class TradingConditionApp(QWidget):
         # 買進條件設置 (多選框)
         buy_condition_layout = QVBoxLayout()
         self.buy_condition_label = QLabel("買進條件：")
-        self.buy_volume_checkbox = QCheckBox("成交量暴增")
+        self.buy_volume_checkbox = QCheckBox("成交量增加")
+        self.volume_multiplier_input = QLineEdit(self)
+        self.volume_multiplier_input.setPlaceholderText("倍數 (如 1.5)")
+        self.volume_multiplier_input.setFixedWidth(80)
+        self.volume_multiplier_input.setVisible(True)
+
+
         self.rsi_checkbox_layout = QHBoxLayout()  # 使用水平布局放置勾選框和輸入框
         self.rsi_checkbox = QCheckBox("RSI<30")
         self.buy_condition_value_input = QLineEdit(self)
@@ -193,28 +200,19 @@ class TradingConditionApp(QWidget):
             rsi_value = self.buy_condition_value_input.text()  # 用戶輸入的RSI閾值
         else:
             rsi_value = None
-        if self.macd_checkbox.isChecked():
-            buy_conditions.append("MACD黃金交叉")
-
-        # 獲取用戶輸入的RSI閾值，若有
-        if rsi_value:
-            print(f"RSI條件閾值: {rsi_value}")
-        else:
-            rsi_value = "無"
-
         # 其他條件設置
         add_condition = self.add_position_input.currentText()
         reduce_condition = self.reduce_position_input.currentText()
         stop_loss_condition = self.stop_loss_input.currentText()
 
-        # 獲取右側設置的金額和比例
-        entry_amount = self.entry_amount_input.text()
-        leverage = self.leverage_input.text()
-        reduce_position_percentage = self.reduce_position_percentage_input.text()
-        add_position_percentage = self.add_position_percentage_input.text()
+        # 進場金額設置
+        entry_amount = self.entry_amount_input.text() if self.entry_amount_input.text() else "未設定"
+        leverage = self.leverage_input.text() if self.leverage_input.text() else "未設定"
+        reduce_position_percentage = self.reduce_position_percentage_input.text() if self.reduce_position_percentage_input.text() else "未設定"
+        add_position_percentage = self.add_position_percentage_input.text() if self.add_position_percentage_input.text() else "未設定"
 
         # 顯示選擇的條件
-        print(f"買進條件: {', '.join(buy_conditions)} (RSI閾值: {rsi_value})")
+        print(f"買進條件: {', '.join(buy_conditions)} (RSI閾值: {rsi_value if rsi_value else '無'})")
         print(f"加倉條件: {add_condition}")
         print(f"減倉條件: {reduce_condition}")
         print(f"停損條件: {stop_loss_condition}")
@@ -225,6 +223,6 @@ class TradingConditionApp(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = TradingConditionApp()
+    ex = TradingConditionApp(None)  # 無需傳入 settings 參數
     ex.show()
     sys.exit(app.exec_())
